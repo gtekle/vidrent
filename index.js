@@ -1,10 +1,11 @@
 const express = require('express');
 
-const genresRouter = require('./routes/router.genres');
-
-const app = express();
+const genresRouter = require('./src/routes/router.genres');
 
 const PORT = process.env.PORT || 5000;
+const app = express();
+
+app.use(express.json());
 
 app.use('/api/genres', genresRouter);
 
