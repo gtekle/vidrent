@@ -1,14 +1,21 @@
 const express = require('express');
 
-const {genres, validateGenre} = require('../models/model.genres');
+const {
+    getGenres,
+    getGenre,
+    createGenre,
+    updateGenre,
+    deleteGenre,
+    validateGenre,
+   } = require('../models/model.genres');
 
 const genresRouter = new express.Router();
 
-genresRouter.get('/', (req, res) => {
-    res.send(genres);
+genresRouter.get('/', async (req, res) => {
+    res.send(await getGenres());
 });
 
-genresRouter.post('/', (req, res) => {
+genresRouter.post('/', async (req, res) => {
     const genre = {
         name: req.body.name
     };
@@ -16,44 +23,36 @@ genresRouter.post('/', (req, res) => {
     const {error, value} = validateGenre(genre);
     if(error) return res.status(400).send(error.details[0].message);
 
-    genre.id = genres.length + 1;
-    genres.push(genre);
-    
-    res.send(genre);
+    const persistedGenre = await createGenre(genre);
+  
+    res.send(persistedGenre);
 });
 
-genresRouter.get('/:id', (req, res) => {
-    const genre = genres.find(gen =>  gen.id === parseInt(req.params.id));
+genresRouter.get('/:id', async (req, res) => {
+    const genre = await getGenre(req.params.id);
     if(!genre) return res.status(404).send(`Genre with given ID was not found!`);
 
     res.send(genre);
 });
 
-genresRouter.put('/:id', (req, res) => {
-    let genre = genres.find(gen =>  gen.id === parseInt(req.params.id));
-    if(!genre) return res.status(404).send(`Genre with given ID was not found!`);
-
-    const newGenre = {
-        name: req.body.name
-    };
+genresRouter.put('/:id', async (req, res) => {
+    const newGenre = { name: req.body.name };
 
     const {error, value} = validateGenre(newGenre);
     if(error) return res.status(400).send(error.details[0].message);
 
-    genre.name = newGenre.name;
+    const updatedGenre = await updateGenre(req.params.id, newGenre)
+    if(!updatedGenre) return res.status(404).send(`Genre with given ID was not found!`);
 
-    genres.push(genre);
-    res.send(genre);
+    res.send(updatedGenre);
 });
 
 genresRouter.delete('/:id', (req, res) => {
-    const genre = genres.find(gen =>  gen.id === parseInt(req.params.id));
-    if(!genre) return res.status(404).send(`Genre with given ID was not found!`);
+    const deletedGenre = deleteGenre(req.params.id);
+
+    if(!deletedGenre) return res.status(404).send(`Genre with given ID was not found!`);
     
-    const index = genres.indexOf(genre);
-    genres.splice(index, 1);
-    
-    res.send(genre);
+    res.send(deletedGenre);
 });
 
 module.exports = genresRouter;
